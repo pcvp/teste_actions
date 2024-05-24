@@ -1,0 +1,32 @@
+name: CI/CD - Trinks (HMG)
+
+on:
+  pull_request:
+    types: [opened, synchronize, closed]
+    branches:
+      - 'master'
+
+jobs:
+  PR-Open:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --no-restore -o C:\PublishBuild
+
+    - name: Zip Build Files
+      run: 7z a C:\PublishBuild\build-output-${{ github.event.pull_request.number }}.zip C:\PublishBuild\**
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-output-${{ github.event.pull_request.number }}
+        path: C:\PublishBuild\build-output-${{ github.event.pull_request.number }}.zip
